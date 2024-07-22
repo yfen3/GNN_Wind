@@ -35,7 +35,7 @@ Given the nodes, extract the features and target for the graph
 def extract_node_feature_target(nodes, features_to_use=None, target_features_to_use=None):
     
     if features_to_use is None:
-        features_to_use = ['name','latitude', 'longitude', 'temp', 'wind_direction']
+        features_to_use = ['name','latitude', 'longitude', 'temp', 'wind_direction', 'wind_speed']
     if target_features_to_use is None:
         target_features_to_use = ['wind_speed']
     
@@ -54,6 +54,7 @@ nodes = {x,y, features} where x and y are all wind speeds,
 def generate_data(raw_data, number_of_neighbours):
     node_features = []
     node_targets = []
+    target_node_index = []
     edges_attributes = []
     edges_row = []
     edges_col = []
@@ -83,18 +84,20 @@ def generate_data(raw_data, number_of_neighbours):
             # Set one station as the target
             target = temp_nodes.loc[temp_nodes['name'] == station]
             target_latitude = target.iloc[0]['latitude']
-            target_longitude = target.iloc[0]['longitude']
+            target_longitude = target.iloc[0]['longitude']                
             # select all other stations
             rest_stations = temp_nodes.loc[temp_nodes['name'] != station]
             # Find the n closest neighbours, distanct to the target is also included
             neighbour_stations = find_clostest_n_neighbours([target_latitude, target_longitude], rest_stations, number_of_neighbours)
             neighbour_index = [stations_to_dict[name] for name in neighbour_stations['name'].unique()]
-
+            neighbour_attributes = neighbour_stations[['distance']].to_numpy().flatten()
             edges_row.extend(np.repeat(idx, len(neighbour_index)))
             edges_col.extend(neighbour_index)
+            edges_attributes.extend(neighbour_attributes)
+            target_node_index.extend(np.repeat(idx, len(node_features)))
     else:
         raise Exception("No data found to generate edges")
     
     
 
-    return node_features, node_targets, edges_row, edges_col
+    return node_features, node_targets, target_node_index, edges_row, edges_col

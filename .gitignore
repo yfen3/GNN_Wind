@@ -1,3 +1,4 @@
 *.pyc
+*.pt
 /Data/processed/
 /Data/raw/
